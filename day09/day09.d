@@ -38,6 +38,60 @@ bool adjacent_to(Position lhs, Position rhs)
     return distance_to(lhs, rhs) <= 2;
 }
 
+template move_next_to(void delegate(Position) update)
+{
+    auto move_next_to(ref Position knot, Position lead)
+    {
+        if (knot.adjacent_to(lead))
+        {
+            return false;
+        }
+
+        int dx = lead.x - knot.x;
+        int dy = lead.y - knot.y;
+        if (dx != 0 && dy != 0)
+        {
+            if (dx * dx < dy * dy)
+            {
+                knot.x = lead.x;
+                knot.y += (dy > 0)? 1 : -1;
+                update(knot);
+            }
+            else if (dx * dx > dy * dy)
+            {
+                knot.y = lead.y;
+                knot.x += (dx > 0)? 1 : -1;
+                update(knot);
+            }
+            else
+            {
+                knot.x 
+            }
+        }
+        dx = lead.x - knot.x;
+        dy = lead.y - knot.y;
+        if (dx != 0)
+        {
+            int sx = (dx > 0)? 1 : -1;
+            while (knot.x + sx != lead.x)
+            {
+                knot.x += sx;
+                update(knot);
+            }
+        }
+        if (dy != 0)
+        {
+            int sy = (dy > 0)? 1 : -1;
+            while (knot.y + sy != lead.y)
+            {
+                knot.y += sy;
+                update(knot);
+            }
+        }
+        return true;
+    }
+}
+
 auto rope(Movement[] movements)
 {
     bool[Position] visited;
@@ -47,74 +101,97 @@ auto rope(Movement[] movements)
     foreach (move; movements)
     {
         auto distance = tail.distance_to(head);
-        assert(distance <= 2);
+        assert(tail.adjacent_to(head));
 
         head.move_with(move);
-        if (!tail.adjacent_to(head))
-        {
-            int dx = head.x - tail.x;
-            int dy = head.y - tail.y;
-            if (distance == 2)
-            {
-                if (dx * dx == 1)
-                {
-                    tail.x = head.x;
-                    tail.y += (dy > 0)? 1 : -1;
-                    visited[tail] = true;
-                }
-                else if (dy * dy == 1)
-                {
-                    tail.y = head.y;
-                    tail.x += (dx > 0)? 1 : -1;
-                    visited[tail] = true;
-                }
-            }
-            dx = head.x - tail.x;
-            dy = head.y - tail.y;
-            if (dx != 0)
-            {
-                int sx = (dx > 0)? 1 : -1;
-                while (tail.x + sx != head.x)
-                {
-                    tail.x += sx;
-                    visited[tail] = true;
-                }
-            }
-            if (dy != 0)
-            {
-                int sy = (dy > 0)? 1 : -1;
-                while (tail.y + sy != head.y)
-                {
-                    tail.y += sy;
-                    visited[tail] = true;
-                }
-            }
-        }
+        move_next_to!((a) {visited[a] = true;})(tail, head);
     }
-    visited.writeln;
 
-    return visited.length;
+    return visited;
+}
+
+auto rope10(Movement[] movements)
+{
+    bool[Position] visited;
+    Position[] rope = new Position[](10); // start at 0, 0
+
+    visited[rope[9]] = true;
+    foreach (move; movements)
+    {
+        /* auto distance = tail.distance_to(head); */
+        /* assert(tail.adjacent_to(head)); */
+
+        rope[0].move_with(move);
+        foreach (int index; 1 .. 9)
+        {
+            rope[index].move_next_to!((a) { })(rope[index - 1]);
+        }
+        rope[9].move_next_to!((a) { visited[a] = true; })(rope[8]);
+        rope.writeln;
+    }
+
+    return visited;
 }
 
 
 auto bridge(string name)
 {
     auto result = slurp!(char, int)(name, "%s %s")
-                .rope;
+                .rope10;
     return result;
 }
 
 int main()
 {
     bridge("input.txt")
+        .length
         .writeln;
     return 0;
 }
 
 unittest
 {
-    bridge("sample.txt").writeln;
-    assert(bridge("sample.txt") == 13);
+    /* assert(bridge("sample.txt") == 13); */
+
+    void dump_state(bool[Position] visited)
+    {
+        auto min_x = visited.byKey.map!((a) => a.x).minElement;
+        auto max_x = visited.byKey.map!((a) => a.x).maxElement;
+
+        auto min_y = visited.byKey.map!((a) => a.y).minElement;
+        auto max_y = visited.byKey.map!((a) => a.y).maxElement;
+
+        [min_y, max_y, min_x, max_x].writeln;
+
+        foreach (y; min_y .. max_y + 1)
+        {
+            foreach (x; min_x .. max_x + 1)
+            {
+                if (Position(x, y) in visited)
+                {
+                    '#'.write;
+                }
+                else
+                {
+                    '.'.write;
+                }
+            }
+            "".writeln;
+        }
+    }
+
+    /* dump_state(bridge("sample.txt")); */
+    /* assert(bridge("sample.txt").length == 1); */
+
+    auto k2 = Position(3, 0);
+    k2.move_next_to!((a) {})(Position(5, 7));
+    k2.writeln;
+    assert(k2 == Position(5, 6));
+
+
+    auto s2 = bridge("sample2.txt");
+    dump_state(s2);
+    assert(s2.length == 36);
 }
 
 
