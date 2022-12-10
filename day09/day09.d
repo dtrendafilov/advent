@@ -1,6 +1,6 @@
 import std.stdio;
 import std.file;
-import std.conv;
+import std.range;
 import std.algorithm;
 import std.algorithm.iteration;
 import std.typecons;
@@ -25,6 +25,17 @@ void move_with(ref Position position, Movement move)
     }
 }
 
+void step(ref Position position, char move)
+{
+    final switch (move)
+    {
+        case 'R': ++position.x; break;
+        case 'L': --position.x; break;
+        case 'U': ++position.y; break;
+        case 'D': --position.y; break;
+    }
+}
+
 
 int distance_to(Position lhs, Position rhs)
 {
@@ -41,6 +52,18 @@ bool adjacent_to(Position lhs, Position rhs)
 template move_next_to(void delegate(Position) update)
 {
     auto move_next_to(ref Position knot, Position lead)
+    /* in */
+    /* { */
+    /*     knot.write; */
+    /*     " -> ".write; */
+    /*     lead.write; */
+    /*     " -> ".write; */
+    /* } */
+    /* out */
+    /* { */
+    /*     knot.writeln; */
+    /* } */
+    /* do */
     {
         if (knot.adjacent_to(lead))
         {
@@ -49,44 +72,26 @@ template move_next_to(void delegate(Position) update)
 
         int dx = lead.x - knot.x;
         int dy = lead.y - knot.y;
-        if (dx != 0 && dy != 0)
+        int sx = (dx > 0)? 1 : ((dx < 0)? -1 : 0);
+        int sy = (dy > 0)? 1 : ((dy < 0)? -1 : 0);
+
+        while (dx != 0 && dy != 0 && (dx * dx + dy * dy > 2))
         {
-            if (dx * dx < dy * dy)
-            {
-                knot.x = lead.x;
-                knot.y += (dy > 0)? 1 : -1;
-                update(knot);
-            }
-            else if (dx * dx > dy * dy)
-            {
-                knot.y = lead.y;
-                knot.x += (dx > 0)? 1 : -1;
-                update(knot);
-            }
-            else
-            {
-                knot.x 
-            }
+            knot.x += sx;
+            knot.y += sy;
+            update(knot);
+            dx -= sx;
+            dy -= sy;
         }
-        dx = lead.x - knot.x;
-        dy = lead.y - knot.y;
-        if (dx != 0)
+        while (knot.x != lead.x && knot.x + sx != lead.x)
         {
-            int sx = (dx > 0)? 1 : -1;
-            while (knot.x + sx != lead.x)
-            {
-                knot.x += sx;
-                update(knot);
-            }
+            knot.x += sx;
+            update(knot);
         }
-        if (dy != 0)
+        while (knot.y != lead.y && knot.y + sy != lead.y)
         {
-            int sy = (dy > 0)? 1 : -1;
-            while (knot.y + sy != lead.y)
-            {
-                knot.y += sy;
-                update(knot);
-            }
+            knot.y += sy;
+            update(knot);
         }
         return true;
     }
@@ -121,13 +126,15 @@ auto rope10(Movement[] movements)
         /* auto distance = tail.distance_to(head); */
         /* assert(tail.adjacent_to(head)); */
 
-        rope[0].move_with(move);
-        foreach (int index; 1 .. 9)
+        while(move[1]--)
         {
-            rope[index].move_next_to!((a) { })(rope[index - 1]);
+            rope[0].step(move[0]);
+            foreach (int index; 1 .. 9)
+            {
+                rope[index].move_next_to!((a) { })(rope[index - 1]);
+            }
+            rope[9].move_next_to!((a) { visited[a] = true; })(rope[8]);
         }
-        rope[9].move_next_to!((a) { visited[a] = true; })(rope[8]);
-        rope.writeln;
     }
 
     return visited;
@@ -163,7 +170,7 @@ unittest
 
         [min_y, max_y, min_x, max_x].writeln;
 
-        foreach (y; min_y .. max_y + 1)
+        foreach (y; iota(max_y, min_y - 1, -1))
         {
             foreach (x; min_x .. max_x + 1)
             {
@@ -180,8 +187,9 @@ unittest
         }
     }
 
-    /* dump_state(bridge("sample.txt")); */
-    /* assert(bridge("sample.txt").length == 1); */
+    dump_state(bridge("sample.txt"));
+    assert(bridge("sample.txt").length == 1);
+    /* assert(bridge("sample.txt").length == 13); */
 
     auto k2 = Position(3, 0);
     k2.move_next_to!((a) {})(Position(5, 7));
