@@ -108,10 +108,16 @@ int score_d(Inventory score, Inventory production, int factory_output, Blueprint
     foreach (action; 0..2)
     */
     int result = memoize!score_d(score, production, -1, blueprint, time - 1);
+    /* if (score.canAfford(blueprint[0]) && production[0] < 3) */
+    /* { */
+    /*     result = max(result, memoize!score_d(score - blueprint[0], production, 0, blueprint, */
+    /*             time - 1)); */
+    /* } */
     foreach (action; 0..3)
     {
         auto cost = blueprint[action];
         if (score.canAfford(cost))
+        /* if (score.canAfford(cost) && (action > 0 || production[0] < 2)) */
         {
             result = max(result, memoize!score_d(score - cost, production, action,
                         blueprint, time - 1));
@@ -136,7 +142,7 @@ int score_blueprint_2(Blueprint blueprint)
 {
     Inventory score;
     auto production = Inventory(1, 0, 0, 0);
-    auto s = score_m(score, production, -1, blueprint, 22);
+    auto s = score_m(score, production, -1, blueprint, 32);
     s.writeln;
     return s;
 }
@@ -151,7 +157,9 @@ ulong score_factory(Blueprint[] factory, int start = 1)
 
 ulong score_factory2(Blueprint[] factory, int start = 1)
 {
-    return factory.take(3)
+    return factory
+        .drop(2)
+        .take(1)
         .map!score_blueprint_2
         .fold!((a, b) => a * b);
 }
@@ -165,6 +173,7 @@ int main1_1()
 
 int main()
 {
+    // results 38 9 18
     auto s = load_factory("input.txt").score_factory2;
     s.writeln;
     return 0;
