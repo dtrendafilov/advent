@@ -6,6 +6,8 @@
 #include <ranges>
 #include <format>
 
+#include <cassert>
+
 
 void print(const auto& v)
 {
@@ -23,6 +25,20 @@ auto read(const char* source)
     return result;
 }
 
+auto skip_advance(auto iterator, auto steps, auto end)
+{
+    auto result = iterator;
+    for (auto i = steps; i > 0; --i)
+    {
+        ++result;
+        if (result == end)
+        {
+            ++result;
+        }
+    }
+    return result;
+}
+
 auto mix(std::span<int> numbers)
 {
     typedef std::list<int> IntList;
@@ -35,40 +51,58 @@ auto mix(std::span<int> numbers)
         positions.push_back(i);
     }
 
+    {
+        auto e = end(result);
+        std::advance(e, 1);
+        assert(e == begin(result));
+        auto b = begin(result);
+        std::advance(b, -1);
+        assert(b == end(result));
+    }
+
+    const auto result_end = end(result);
+    const auto result_begin = begin(result);
+    const auto modulo = numbers.size() - 1;
+
     /* for (auto number: std::views::zip(numbers, positions)) */
     for (auto i = 0u; i < numbers.size(); ++i)
     {
         auto number = numbers[i];
-        /* std::cout << number */
-        /*     << " move with " << number + (number >= 0 ? 1 : -1) */
-        /*     << std::endl; */
-        auto iterator = positions[i];
-        auto new_position = iterator;
-        /* std::advance(new_position, number + (number >= 0 ? 1 : -1)); */
-        auto result_end = end(result);
-        auto result_begin = begin(result);
-        if (number >= 0)
+
+        while (number < 0)
         {
-            for (auto i = number + 1; i > 0; --i)
+            number += modulo;
+        }
+        number %= modulo;
+        if (!number)
+        {
+            continue;
+        }
+
+        auto iterator = positions[i];
+        /*
+         * 1. Splicing at begin and end gives the same order, but consumes an
+         * iterator increment, so skip the end iterator.
+         * 2. Simulate removing the current number from the list (it doesn't
+         * count to skip itself) by skipping the next eventual position.
+         */
+        auto next = iterator;
+        ++next;
+        if (next == result_end)
+        {
+            ++next;
+        }
+        auto new_position = iterator;
+
+        for (auto i = number; i > 0; --i)
+        {
+            ++new_position;
+            while (new_position == result_end || new_position == next)
             {
                 ++new_position;
-                if (new_position == result_end)
-                    ++new_position;
-                /* std::cout << i << " at " << *new_position << std::endl; */
-            }
-        }
-        else
-        {
-            for (auto i = number; i < 0; ++i)
-            {
-                --new_position;
-                if (new_position == result_begin)
-                    --new_position;
-                /* std::cout << i << " at " << *new_position << std::endl; */
             }
         }
         result.splice(new_position, result, iterator);
-        /* print(result); */
     }
     return result;
 }
@@ -76,14 +110,11 @@ auto mix(std::span<int> numbers)
 int groove(const std::list<int>& mixed)
 {
     auto zero = std::find(begin(mixed), end(mixed), 0);
-    auto i1000 = zero;
-    std::advance(i1000, 1 + 1000 % mixed.size());
+    auto i1000 = skip_advance(zero, 1000, end(mixed));
     std::cout << *i1000 << std::endl;
-    auto i2000 = zero;
-    std::advance(i2000, 1 + 2000 % mixed.size());
+    auto i2000 = skip_advance(i1000, 1000, end(mixed));
     std::cout << *i2000 << std::endl;
-    auto i3000 = zero;
-    std::advance(i3000, 1 + 3000 % mixed.size());
+    auto i3000 = skip_advance(i2000, 1000, end(mixed));
     std::cout << *i3000 << std::endl;
     return *i1000 + *i2000 + *i3000;
 }
@@ -93,6 +124,7 @@ int main(int argc, const char* argv[])
     auto numbers = read(argc > 1? argv[1] : "input.txt");
     /* print(numbers); */
     auto mixed = mix(numbers);
+    /* print(mixed); */
     std::cout << groove(mixed) << std::endl;
     return 0;
 }
