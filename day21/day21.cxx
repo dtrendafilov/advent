@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <cctype>
 #include <cstdlib>
+#include <cassert>
 
 template <typename Op>
 struct MathJob
@@ -23,7 +24,11 @@ struct Equal
 {
     std::string left;
     std::string right;
-} ;
+};
+
+struct Unknown
+{
+};
 
 typedef std::variant<int64_t,
         Add, Substract, Multiply, Divide,
@@ -92,12 +97,146 @@ struct Shout
 
 
 
-struct SolveForHumn
+auto solve_rhs(std::plus<int64_t>, int64_t result, int64_t rhs)
 {
-    int64_t operator()(int number) const
+    return result - rhs;
+}
+
+auto solve_rhs(std::minus<int64_t>, int64_t result, int64_t rhs)
+{
+    return result + rhs;
+}
+
+auto solve_rhs(std::multiplies<int64_t>, int64_t result, int64_t rhs)
+{
+    return result / rhs;
+}
+
+auto solve_rhs(std::divides<int64_t>, int64_t result, int64_t rhs)
+{
+    return result * rhs;
+}
+
+auto solve_lhs(std::plus<int64_t>, int64_t result, int64_t lhs)
+{
+    return result - lhs;
+}
+
+auto solve_lhs(std::minus<int64_t>, int64_t result, int64_t lhs)
+{
+    return lhs - result;
+}
+
+auto solve_lhs(std::multiplies<int64_t>, int64_t result, int64_t lhs)
+{
+    return result / lhs;
+}
+
+auto solve_lhs(std::divides<int64_t>, int64_t result, int64_t lhs)
+{
+    return lhs / result;
+}
+
+
+struct FindXVisitor
+{
+    int64_t operator()(int64_t) const
+    {
+        return _result;
+    }
+
+    template <typename Op>
+    int64_t operator()(const MathJob<Op>& job) const
+    {
+        auto& lhs = (*_monkeys)[job.left];
+        auto& rhs = (*_monkeys)[job.right];
+
+        assert(rhs.index() == 0 || lhs.index() == 0);
+
+        // TODO: replace "humn" with Unknown to simplify this
+        if (lhs.index() != 0 || job.left == "humn")
+        {
+            auto result = solve_rhs(Op{}, _result, std::get<0>(rhs));
+            return std::visit(FindXVisitor{_monkeys, result}, lhs);
+        }
+        if (rhs.index() != 0 || job.right == "humn")
+        {
+            auto result = solve_lhs(Op{}, _result, std::get<0>(lhs));
+            return std::visit(FindXVisitor{_monkeys, result}, rhs);
+        }
+        return 0;
+    }
+
+    int64_t operator()(const Equal&) const
+    {
+        assert(false && "not reached");
+        return 0;
+    }
+
+    Monkeys* _monkeys;
+    int64_t _result;
+};
+
+
+struct SolveForVisitor
+{
+    Job operator()(int64_t number) const
     {
         return number;
     }
+
+    template <typename Op>
+    Job operator()(const MathJob<Op>& job) const
+    {
+        auto& lhs = (*_monkeys)[job.left];
+        auto& rhs = (*_monkeys)[job.right];
+
+        if (job.left != _unknown)
+        {
+            lhs = std::visit(*this, lhs);
+        }
+
+        if (job.right != _unknown)
+        {
+            rhs = std::visit(*this, rhs);
+        }
+
+        // TODO: replace "humn" with Unknown to simplify this
+        if (job.left != _unknown && job.right != _unknown
+                && lhs.index() == 0 && rhs.index() == 0)
+        {
+            return Op{}(std::get<0>(lhs), std::get<0>(rhs));
+        }
+        return job;
+    }
+
+    Job operator()(const Equal& job) const
+    {
+        auto& lhs = (*_monkeys)[job.left];
+        auto& rhs = (*_monkeys)[job.right];
+
+        lhs = std::visit(*this, lhs);
+
+        rhs = std::visit(*this, rhs);
+
+        assert(lhs.index() == 0 || rhs.index() == 0);
+        assert(lhs.index() != 0 || rhs.index() != 0);
+
+        if (lhs.index() != 0)
+        {
+            auto result = std::get<0>(rhs);
+            return std::visit(FindXVisitor{_monkeys, result}, lhs);
+        }
+        if (rhs.index() != 0)
+        {
+            auto result = std::get<0>(lhs);
+            return std::visit(FindXVisitor{_monkeys, result}, rhs);
+        }
+        return job;
+    }
+
+    Monkeys* _monkeys;
+    std::string _unknown;
 };
 
 struct ToEqual
@@ -128,8 +267,13 @@ int main(int argc, const char* argv[])
 
     // Part 2
     {
-        auto root = monkeys["root"];
-        monkeys["root"] = std::visit(ToEqual{}, root);
+        auto& root = monkeys["root"];
+        root = std::visit(ToEqual{}, root);
+        assert(root.index() == 5);
+        SolveForVisitor solveFor{&monkeys, "humn"};
+        auto result = std::visit(solveFor, root);
+        assert(result.index() == 0);
+        std::cout << "shout: " << std::get<0>(result) << std::endl;
     }
 
     return 0;
