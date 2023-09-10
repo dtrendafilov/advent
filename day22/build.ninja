@@ -1,0 +1,12 @@
+cxxflags = -std=c++20 -g3 -Wall -Wextra -O3
+
+rule cxx_single
+    command = clang++ $cxxflags $in -o $out
+
+rule run_test
+    command = ./$in
+
+build day22.exe: cxx_single day22.cxx
+build test: run_test day22.exe
+
+# default day22.exe
