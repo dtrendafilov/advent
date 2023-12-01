@@ -1,0 +1,22 @@
+cxxflags = -std=c++20 -g -Wall -Wextra
+
+rule cxx_single
+    command = clang++ $cxxflags $in -o $out
+
+rule run_input1
+    command = ./$in 1 input.txt
+rule run_input2
+    command = ./$in 2 input.txt
+
+rule run_sample1
+    command = ./$in 1 sample.txt
+
+rule run_sample2
+    command = ./$in 2 sample2.txt
+
+build solution.exe: cxx_single solution.cxx
+build sample: run_sample1 solution.exe
+build sample2: run_sample2 solution.exe
+build test1: run_input1 solution.exe
+build test2: run_input2 solution.exe
+
