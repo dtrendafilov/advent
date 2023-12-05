@@ -1,0 +1,11 @@
+cxxflags = -std=c++20 -O2 -g -Wall -Wextra
+
+rule cxx_single
+    command = clang++ $cxxflags $in -o $out
+
+rule run_test
+    command = ./$in --minimal=1
+
+build solution.exe: cxx_single solution.cxx
+build sample: run_test solution.exe
+
