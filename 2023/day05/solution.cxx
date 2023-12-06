@@ -1,15 +1,13 @@
+#include <cstdint>
 #include <iostream>
 #include <fstream>
 #include <algorithm>
 #include <limits>
-#include <numeric>
-#include <ranges>
 #include <vector>
 #include <string>
-#include <regex>
 #include <array>
+#include <future>
 
-#include "../darllen.hxx"
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "../doctest.h"
@@ -172,6 +170,7 @@ TEST_CASE("Sample")
 
     SUBCASE("Part 2")
     {
+        CHECK(almanac.seeds.size() % 2 == 0);
         auto min_location = std::numeric_limits<uint64_t>::max();
         for (auto i = 0u; i < almanac.seeds.size(); i += 2)
         {
@@ -184,6 +183,19 @@ TEST_CASE("Sample")
         }
         CHECK(min_location == 46);
     }
+}
+
+TEST_CASE("EmptyFuture")
+{
+    std::future<uint64_t> p;
+    CHECK(!p.valid());
+}
+
+TEST_CASE("FutureWithValue")
+{
+    std::future<uint64_t> p = std::async([]() -> uint64_t { return 42; });
+    CHECK(p.valid());
+    CHECK(p.get() == 42);
 }
 
 TEST_CASE("Input")
@@ -203,15 +215,31 @@ TEST_CASE("Input")
     }
     SUBCASE("Part 2")
     {
-        auto min_location = std::numeric_limits<uint64_t>::max();
+        CHECK(almanac.seeds.size() % 2 == 0);
+        const auto seed_ranges = almanac.seeds.size() / 2;
+        std::vector<std::future<uint64_t>> locations(seed_ranges);
+
         for (auto i = 0u; i < almanac.seeds.size(); i += 2)
         {
-            auto limit = almanac.seeds[i] + almanac.seeds[i+1];
-            for (auto seed = almanac.seeds[i]; seed < limit; ++seed)
+            auto task = [&almanac](unsigned i)
             {
-                auto location = map_through(almanac, seed);
-                min_location = std::min(min_location, location);
-            }
+                auto min_location = std::numeric_limits<uint64_t>::max();
+                auto limit = almanac.seeds[i] + almanac.seeds[i+1];
+                for (auto seed = almanac.seeds[i]; seed < limit; ++seed)
+                {
+                    auto location = map_through(almanac, seed);
+                    min_location = std::min(min_location, location);
+                }
+                return min_location;
+            };
+            locations[i / 2] = std::async(std::launch::async, task, i);
+            CHECK(locations[i / 2].valid());
+        }
+        auto min_location = std::numeric_limits<uint64_t>::max();
+        for (auto& location : locations)
+        {
+            CHECK(location.valid());
+            min_location = std::min(min_location, location.get());
         }
         std::cout << "Part 2 minimal location: " << min_location << std::endl;
     }
