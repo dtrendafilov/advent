@@ -1,6 +1,7 @@
 #include <regex>
 #include <sstream>
 #include <charconv>
+#include <string>
 
 namespace darllen
 {
@@ -25,6 +26,14 @@ bool to_value(const std::sub_match<It>& match, int& value)
     auto start = &(*match.first);
     auto result = std::from_chars(start, start + match.length(), value);
     return result.ec == std::errc{};
+}
+
+template <typename It, typename Ch, typename Traits, typename Alloc>
+bool to_value(const std::sub_match<It>& match,
+              std::basic_string<Ch, Traits, Alloc>& value)
+{
+    value = match.str();
+    return true;
 }
 
 template <typename It, typename Alloc, typename Arg>
