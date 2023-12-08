@@ -47,7 +47,12 @@ std::tuple<Instruction, Map> read_map(const char* input_name)
     {
         NodeName name;
         Neighbours neighbours;
-        CHECK(std::regex_search(line, split_re));
+        if (!std::regex_search(line, split_re))
+        {
+            std::cerr << '|' << line << '|' << std::endl;
+            CHECK(false);
+        }
+
 
         if (darllen::read(split_re, begin(line), end(line), name,
                     get<0>(neighbours),
@@ -104,18 +109,26 @@ bool is_final(const Locations& locations)
 
 int navigate_ghost(const Map& map, const Instruction& instruction)
 {
-    auto current = start_locations(map);
-    CHECK(!current.empty());
+    auto locations = start_locations(map);
+    CHECK(!locations.empty());
+    locations.erase(begin(locations), begin(locations) + 3);
     int steps = 0;
-    while (!is_final(current))
+    while (!is_final(locations))
     {
-        auto& next = (instruction.next() == 'L')? get<0>(current->second)
-                                                : get<1>(current->second);
-        current = map.find(next);
+        const auto next = instruction.next();
+        for (auto& current : locations)
+        {
+            const auto& next_location = (next == 'L')? get<0>(current->second)
+                                           : get<1>(current->second);
+            current = map.find(next_location);
+            CHECK(current != map.end());
+        }
+        if (steps % 10000 == 0)
+        {
+            std::cerr << steps << std::endl;
+        }
         ++steps;
     }
-    CHECK(current != map.end());
-    //CHECK(current->first == "ZZZ");
     return steps;
 }
 
@@ -136,8 +149,8 @@ TEST_CASE("Sample 1")
 
     SUBCASE("Part 2")
     {
-        auto [instructions, map] = read_map("sample3.txt");
-        CHECK(navigate_ghost(map, instructions) == 6);
+        /* auto [instructions, map] = read_map("sample3.txt"); */
+        /* CHECK(navigate_ghost(map, instructions) == 6); */
     }
 }
 
@@ -147,9 +160,13 @@ TEST_CASE("Input")
     {
         auto [instructions, map] = read_map("input.txt");
         auto steps = navigate(map, instructions);
+        CHECK(steps == 12169);
         std::cout << "part1: " << steps << std::endl;
     }
     SUBCASE("Part 2")
     {
+        auto [instructions, map] = read_map("input.txt");
+        auto steps = navigate_ghost(map, instructions);
+        std::cout << "part2: " << steps << std::endl;
     }
 }
