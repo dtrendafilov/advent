@@ -1,8 +1,4 @@
-#include <iostream>
-#include <fstream>
-#include <algorithm>
-#include <array>
-#include <queue>
+#include "precompiled.hxx"
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "../doctest.h"
@@ -495,5 +491,6 @@ TEST_CASE("Input")
         mark_inside(walked);
         auto r = count_inside(walked);
         std::cout << "part 2: " << r << std::endl;
+        CHECK(r == 459);
     }
 }
