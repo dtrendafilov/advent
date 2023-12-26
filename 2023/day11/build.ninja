@@ -1,0 +1,24 @@
+cxxflags = -std=c++23 -g3 -Wall -Wextra
+
+rule pch_create
+    depfile = $out.d
+    deps = gcc
+    command = clang++ -MD -MF $out.d -fpch-codegen -fpch-debuginfo -fpch-instantiate-templates $in $cxxflags -o $out
+
+rule cxx_single
+    depfile = $out.d
+    deps = gcc
+    command = clang++ -MD -MF $out.d -include-pch precompiled.hxx.pch -c $cxxflags $in -o $out
+
+rule link
+    command = clang++ $cxxflags $in -o $out
+
+rule run_test
+    pool = console
+    command = ./$in --minimal=1
+
+build precompiled.hxx.pch: pch_create precompiled.hxx
+build solution.obj: cxx_single solution.cxx | precompiled.hxx.pch
+build solution.exe: link solution.obj precompiled.hxx.pch
+build sample: run_test solution.exe
+
