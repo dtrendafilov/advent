@@ -2,4 +2,7 @@
 *.obj
 *.ilk
 *.pdb
+*.pch
+.ninja_deps
+.ninja_log
 .vs/
