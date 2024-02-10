@@ -11,11 +11,11 @@ set(SOURCE_FILES
     ${HEADER_FILES}
 )
 
-add_executable(solution ${SOURCE_FILES})
-set_property(TARGET solution PROPERTY CXX_STANDARD 23)
-target_precompile_headers(solution PRIVATE ${HEADER_FILES})
+add_executable(day10 ${SOURCE_FILES})
+set_property(TARGET day10 PROPERTY CXX_STANDARD 23)
+target_precompile_headers(day10 PRIVATE ${HEADER_FILES})
 
 enable_testing()
-add_test(NAME solution
-    COMMAND solution --minimal=1
+add_test(NAME day10
+    COMMAND day10 --minimal=1
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
