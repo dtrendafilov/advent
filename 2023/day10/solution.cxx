@@ -244,10 +244,10 @@ Map create_walked(const Map& the_map)
     auto walked = Map(the_map.size(), line);
     walked.front() = std::string(the_map[0].size(), 'o');
     walked.back() = std::string(the_map[0].size(), 'o');
-    for (auto& line: walked)
+    for (auto& l: walked)
     {
-        line.front() = 'o';
-        line.back() = 'o';
+        l.front() = 'o';
+        l.back() = 'o';
     }
     return walked;
 }
@@ -410,7 +410,7 @@ void mark_inside(Map& walked)
 
 auto count_inside(const Map& walked)
 {
-    auto count = 0u;
+    auto count = 0ull;
     for (auto& line: walked)
     {
         count += std::count(begin(line), end(line), 'i');
