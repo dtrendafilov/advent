@@ -13,5 +13,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS On)
 
 set(CMAKE_CXX_STANDARD 23)
 
+enable_testing()
+
 add_subdirectory(day10)
 
