@@ -16,4 +16,5 @@ set(CMAKE_CXX_STANDARD 23)
 enable_testing()
 
 add_subdirectory(day10)
+add_subdirectory(day13)
 
