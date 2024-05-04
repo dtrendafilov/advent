@@ -161,6 +161,6 @@ TEST_CASE("Input")
         {
             sum += scorer.score(m);
         }
-        CHECK(sum == 400);
+        CHECK(sum == 33054);
     }
 }
