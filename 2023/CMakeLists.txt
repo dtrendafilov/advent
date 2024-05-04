@@ -17,4 +17,5 @@ enable_testing()
 
 add_subdirectory(day10)
 add_subdirectory(day13)
+add_subdirectory(day14)
 
