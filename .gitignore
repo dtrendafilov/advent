@@ -6,3 +6,6 @@
 .ninja_deps
 .ninja_log
 .vs/
+out/
+.vscode
+.cache
