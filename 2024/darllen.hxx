@@ -88,4 +88,10 @@ bool search_read(const std::basic_regex<CharT, Traits>& format, It begin, It end
     }
     return false;
 }
+
+bool from_match(const auto& match, auto& value)
+{
+    return detail::to_value(match, value);
+}
+
 }
