@@ -44,6 +44,16 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo"
             }
+        },
+        {
+            "name": "clang-ninja-ubsan",
+            "hidden": false,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "cacheVariables": {
+                "ADVENT_SANITIZE": "1",
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
         }
     ],
     "buildPresets": [
@@ -54,6 +64,10 @@
         {
             "name": "clang-ninja-release",
             "configurePreset": "clang-ninja-release"
+        },
+        {
+            "name": "clang-ninja-ubsan",
+            "configurePreset": "clang-ninja-ubsan"
         }
     ],
     "testPresets": [
@@ -77,6 +91,11 @@
             "name": "clang-ninja-release",
             "inherits": [ "base-tests" ],
             "configurePreset": "clang-ninja-release"
+        },
+        {
+            "name": "clang-ninja-ubsan",
+            "inherits": [ "base-tests" ],
+            "configurePreset": "clang-ninja-ubsan"
         }
     ],
     "workflowPresets": [

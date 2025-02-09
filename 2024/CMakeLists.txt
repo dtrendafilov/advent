@@ -8,6 +8,16 @@ else()
     add_compile_options(-Wall -Wextra -pedantic)
 endif()
 
+if (ADVENT_SANITIZE)
+    if (MSVC)
+        add_compile_options(/fsanitize=address,undefined)
+    else()
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+        add_compile_options(-fsanitize=address,undefined)
+        add_link_options(-fsanitize=address,undefined)
+    endif()
+endif()
+
 set(CMAKE_COMPILE_WARNING_AS_ERROR Off)
 set(CMAKE_EXPORT_COMPILE_COMMANDS On)
 
