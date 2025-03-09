@@ -143,6 +143,6 @@ TEST_CASE("Input")
     }
     SUBCASE("Part 2")
     {
-        CHECK(count_antinodes(a, m, true) == 34);
+        CHECK(count_antinodes(a, m, true) == 1221);
     }
 }
