@@ -92,7 +92,7 @@ bool in_wave(const Wavefront& wave, Position current)
 
 Wavefront start_walk(const Map& the_map, const Position& start)
 {
-    Wavefront wave;
+    Wavefront wave{};
     auto next_neighbour = 0u;
     for (int delta = -1; delta <= 1; delta += 2)
     {
@@ -115,7 +115,7 @@ Wavefront start_walk(const Map& the_map, const Position& start)
 
 Wavefront step(const Map& the_map, const Wavefront& current, const Wavefront& previous)
 {
-    Wavefront next_step;
+    Wavefront next_step{};
     /*
     auto next_output = begin(next_step);
     for (auto p: current)
