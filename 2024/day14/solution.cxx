@@ -140,19 +140,6 @@ TEST_CASE("Sample Single")
     }
 }
 
-bool non_decreasing(const std::span<int>& per_row)
-{
-    int decreasing = 0;
-    for (size_t i = 1; i < per_row.size() && decreasing < 2; ++i)
-    {
-        if (per_row[i] < per_row[i - 1])
-        {
-            return ++decreasing;
-        }
-    }
-    return decreasing < 2;
-}
-
 template <Number COLUMNS, Number ROWS>
 Number find_tree(Robots& robots)
 {
@@ -167,7 +154,6 @@ Number find_tree(Robots& robots)
         robot.position.y = (ROWS + robot.position.y + robot.velocity.y) % ROWS;
     };
 
-    int steps = 0;
     std::array<int, ROWS> per_row;
     for (auto& robot: robots)
     {
@@ -175,8 +161,8 @@ Number find_tree(Robots& robots)
         per_row[robot.position.y]++;
     }
 
-
-    do
+    auto steps = COLUMNS * ROWS;
+    for (auto step = 1; step <= steps; ++step)
     {
         for (auto& robot : robots)
         {
@@ -187,21 +173,22 @@ Number find_tree(Robots& robots)
             per_row[robot.position.y]++;
         }
 
-        ++steps;
-        if (!non_decreasing(per_row))
-        {
-            continue;
-        }
 
-        std::cout << "Step " << steps << std::endl;
-        for (const auto& row : map)
-        {
-            std::cout.write(row.data(), COLUMNS);
-            std::cout << std::endl;
+        
+        // Save the map as a PBM file
+        std::string filename = "map_step_" + std::to_string(step) + ".pbm";
+        std::ofstream pbm(filename);
+        if (pbm.is_open()) {
+            pbm << "P1\n" << COLUMNS << " " << ROWS << "\n";
+            for (Number y = 0; y < ROWS; ++y) {
+                for (Number x = 0; x < COLUMNS; ++x) {
+                    pbm << (map[y][x] == '@' ? "1 " : "0 ");
+                }
+                pbm << "\n";
+            }
         }
-        std::cout << std::endl;
     }
-    while (steps < 100000);
+        
     return steps;
 }
 
@@ -211,10 +198,6 @@ TEST_CASE("Sample")
     SUBCASE("Part 1")
     {
         CHECK(safety<11, 7>(robots) == 12);
-    }
-    SUBCASE("Part 2")
-    {
-        //CHECK(find_tree<11, 7>(robots) == 12);
     }
 }
 
@@ -227,6 +210,7 @@ TEST_CASE("Input")
     }
     SUBCASE("Part 2")
     {
-        CHECK(6 + 7 == 13);
+        // The real tree comes after 7502 seconds
+        CHECK(find_tree<101, 103>(robots) == 101 * 103);
     }
 }

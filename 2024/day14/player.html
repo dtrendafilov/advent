@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+    <input type="number" id="imageRange" min="1" max="10403" value="0" step="1">
+    <script>
+        const imageRange = document.getElementById('imageRange');
+        imageRange.addEventListener('input', function() {
+            const value = parseInt(this.value, 10);
+            const img = document.getElementById('bitmapImage');
+            img.src = `bitmaps/step_${String(value).padStart(5, '0')}.png`;
+        });
+    </script>
+    <div class="image-container">
+        <img id="bitmapImage" alt="Bitmap Image" src="bitmaps/step_00000.png">
+    </div>
+
+    <script>
+        let left = 7450;
+        let right = 7550;
+        let images = [];
+        for (let s = left; s <= right; ++s) {
+            let image = new Image();
+            image.src = `bitmaps/step_${String(s).padStart(5, '0')}.png`;
+            images.push(image);
+        }
+        // Function to load and display a bitmap image
+        function loadBitmapImage(path) {
+            const img = document.getElementById('bitmapImage');
+            img.src = path;
+            img.onerror = function(e) {
+                console.error('Error loading image:', e);
+            };
+        }
+        let step = left;
+        function updateImage() {
+            const input = document.getElementById('imageRange');
+            ++step
+            if (step > right) {
+                step = left;
+            }
+            input.value = step;
+            const img = document.getElementById('bitmapImage');
+            img.src = `bitmaps/step_${String(step).padStart(5, '0')}.png`;
+        }
+        //setInterval(updateImage, 200);
+
+    </script>
+</body>
+</html>
